@@ -1,8 +1,10 @@
 # CLAUDE.md
 
 ## Current Phase
-**Phase 0 — Skeleton**
-Scaffold repo; model broker + smoke test (Groq call + local embedding); FastAPI + React skeleton; basic cited RAG Q&A (RAG + Judge) reading from `data/raw/`. Build thin end-to-end first, before deepening the ontology in Phase 1.
+**Phase 1 — Core ontology** (next)
+Topic Retriever + Ontologist (local existence pre-filter + LLM insertion) + seed ontology; SQLite tree + occurrences; sequential resumable ingest.
+
+**Phase 0 — Skeleton: ✅ complete.** Repo scaffolded; config-driven model broker + smoke test (Groq + local embedding); ingestion pipeline (dual AMD/NVIDIA transcript formats → ChromaDB, 787 paragraphs, resumable checkpoint); RAG + Judge cited Q&A; FastAPI (`/query` SSE stream, `/health`); React+TS single-page frontend (query box → streamed cited answer) verified end-to-end through the Vite proxy.
 
 ## What this is
 An agentic RAG system that ingests tech-sector earnings call transcripts, autonomously extracts financial topics, organizes them into a self-evolving hierarchical ontology, and surfaces trend insights plus cited analyst Q&A. It reproduces the Bloomberg FinIR 2025 paper *"Agentic Retrieval of Topics and Insights from Earnings Calls"* (arXiv 2507.07906). Scope: technology sector, 2 companies × 4 quarters = 8 transcripts placed manually in `data/raw/`, paragraph-level granularity.

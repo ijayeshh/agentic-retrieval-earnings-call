@@ -1,0 +1,15 @@
+# Environment
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+
+# Node
+node_modules/
+
+# Generated data artifacts
+data/chroma/
+data/ingest_checkpoint.json

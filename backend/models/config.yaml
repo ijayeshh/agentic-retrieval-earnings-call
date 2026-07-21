@@ -1,0 +1,11 @@
+# Model configuration — all model names are config-driven (never hardcode).
+# Groq rotates its lineup; verify live in the Groq console before changing.
+
+llm_provider: groq
+llm_model: openai/gpt-oss-20b
+
+# Local HuggingFace sentence-transformers (no API, no rate limit).
+embedding_model: all-MiniLM-L6-v2
+coherence_embedding_model: all-MiniLM-L6-v2
+
+temperature: 0

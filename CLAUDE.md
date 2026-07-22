@@ -13,6 +13,8 @@ Supervisor routing; Judge + retry in-graph; ontology coherence vs random + RAGAS
 ## What this is
 An agentic RAG system that ingests tech-sector earnings call transcripts, autonomously extracts financial topics, organizes them into a self-evolving hierarchical ontology, and surfaces trend insights plus cited analyst Q&A. It reproduces the Bloomberg FinIR 2025 paper *"Agentic Retrieval of Topics and Insights from Earnings Calls"* (arXiv 2507.07906). Scope: technology sector, 2 companies × 4 quarters = 8 transcripts placed manually in `data/raw/`, paragraph-level granularity.
 
+**Current corpus:** 7 transcripts present (AMD Q1/Q2/Q4 + NVDA Q1–Q4; **AMD Q3 2025 missing**). Ingested into the ontology so far: AMD Q1 (full) + AMD Q2 (partial, para 53) — see paused-ingest note above.
+
 ## Tech stack
 - **LLM roles:** Groq `openai/gpt-oss-20b` (extraction, routing, Q&A synthesis, Judge, ontology insertion)
 - **Embeddings:** local HuggingFace `sentence-transformers` (retrieval + existence pre-filter; `all-MiniLM-L6-v2` for coherence metric) — no API, no rate limit

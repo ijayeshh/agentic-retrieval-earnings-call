@@ -80,3 +80,8 @@ def get_llm() -> Any:
 def get_embeddings() -> Any:
     """Convenience accessor for the local SentenceTransformer embedding model."""
     return get_broker().get_embeddings()
+
+
+def get_coherence_embeddings() -> Any:
+    """Convenience accessor for the coherence-metric SentenceTransformer model."""
+    return get_broker().get_coherence_embeddings()

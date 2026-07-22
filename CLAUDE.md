@@ -1,8 +1,12 @@
 # CLAUDE.md
 
 ## Current Phase
-**Phase 3 - Orchestration + eval** (next)
-Supervisor routing; Judge + retry in-graph; ontology coherence vs random + RAGAS (15Q) + retrieval metrics; LangSmith regression suite.
+**Phase 4 - MCP + observability + polish** (next)
+One MCP server (`query_ontology`, `topic_trend`); LangSmith dashboards/alerts; README with results table.
+
+**Phase 3 — Orchestration + eval: ✅ complete (code).** LangGraph Q&A path in `backend/graph/` (Supervisor router → RAG → Judge → bounded retry, `MemorySaver` session checkpointer via `thread_id`); `/query` migrated to stream the graph via `astream`. Eval harness in `backend/eval/`: `coherence.py` (parent↔child cosine vs random), `retrieval_metrics.py` + `gold/gold_qa.json` (10Q: precision/recall/hit@k/MRR/nDCG), `faithfulness.py` + `gold/gold_faith.json` (15Q, Judge-based faithfulness/citation-accuracy), `run_eval.py` runner. LangSmith tracing via `backend/observability.py` (`@traceable` in run_eval). Custom Judge-based faithfulness chosen over RAGAS.
+  - **Verified:** graph via direct `invoke()` (routes qa, Judge pass, cited answer, session messages); `main.py` imports + all routes; coherence = **0.477 vs 0.176 random** (Δ+0.30 ✓); retrieval@10 = **hit 0.80, recall 0.62, MRR 0.45, nDCG 0.45**.
+  - **SKIPPED (not runtime-verified — code written, not executed):** (1) live SSE `/query` through the running server (only direct `invoke()` tested); (2) faithfulness eval run over `gold_faith.json` (aborted the 2Q subset — never confirmed output); (3) full `run_eval.py` end-to-end incl. `--faithfulness`; (4) confirming traces actually land in the LangSmith project (flag enabled, not visually confirmed). All are LLM-bound (deferred to conserve the Groq free-tier daily cap).
 
 **Phase 2 — Trend insights: ✅ complete (code).** `backend/insights/trend_kendall.py` (per-company/topic quarterly frequency → Kendall's tau → up/down/flat, product-name topics excluded); `GET /trends` and `GET /ontology` endpoints; frontend tabs — Recharts trend chart + interactive ontology explorer. Verified against AMD Q1+Q2 data.
 

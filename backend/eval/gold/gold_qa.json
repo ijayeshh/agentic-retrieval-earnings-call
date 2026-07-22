@@ -1,0 +1,52 @@
+[
+  {
+    "question": "What did AMD say about free cash flow?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-0", "amd-q1-2025-22", "amd-q2-2025-3", "amd-q2-2025-36"]
+  },
+  {
+    "question": "How is AMD describing customer demand for EPYC processors?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-4", "amd-q1-2025-15", "amd-q2-2025-4"]
+  },
+  {
+    "question": "What did AMD say about data center AI revenue growth?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-6", "amd-q1-2025-38", "amd-q2-2025-9"]
+  },
+  {
+    "question": "How are rising memory costs affecting AMD's business?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-12", "amd-q1-2025-64", "amd-q1-2025-66"]
+  },
+  {
+    "question": "What did AMD say about operating expenses?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-19", "amd-q1-2025-24", "amd-q2-2025-30"]
+  },
+  {
+    "question": "What did AMD say about Ryzen processor sales?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-0", "amd-q1-2025-11", "amd-q2-2025-3"]
+  },
+  {
+    "question": "What is AMD's outlook for server CPU revenue growth?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-39", "amd-q1-2025-49", "amd-q2-2025-26"]
+  },
+  {
+    "question": "What did AMD say about the server CPU TAM?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-27", "amd-q1-2025-61", "amd-q1-2025-70"]
+  },
+  {
+    "question": "What did AMD say about the China market?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q2-2025-46", "amd-q2-2025-48"]
+  },
+  {
+    "question": "What did AMD report for diluted earnings per share?",
+    "company": "AMD",
+    "relevant_ids": ["amd-q1-2025-19", "amd-q2-2025-31"]
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "_comment": "Add this under 'mcpServers' in your Claude Desktop config (claude_desktop_config.json). Adjust the absolute paths to this repo/venv on your machine.",
+  "mcpServers": {
+    "earnings-intel-ontology": {
+      "command": "E:\\agentic-retrieval-earnings-call\\.venv\\Scripts\\python.exe",
+      "args": ["-m", "backend.mcp.ontology_server"],
+      "cwd": "E:\\agentic-retrieval-earnings-call"
+    }
+  }
+}

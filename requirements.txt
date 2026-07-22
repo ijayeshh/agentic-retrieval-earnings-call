@@ -9,3 +9,4 @@ scipy
 pydantic
 python-dotenv
 langsmith
+mcp

@@ -1,8 +1,9 @@
 # CLAUDE.md
 
 ## Current Phase
-**Phase 4 - MCP + observability + polish** (next)
-One MCP server (`query_ontology`, `topic_trend`); LangSmith dashboards/alerts; README with results table.
+**Phase 4 - MCP + observability: ✅ MCP server complete.**
+`backend/mcp/ontology_server.py` — FastMCP server (stdio) with two read-only tools: `query_ontology(topic|company)` (node inspect / company top-topics / summary) and `topic_trend(company, topic)` (quarterly series + Kendall's tau). Verified in-process + via FastMCP `call_tool` dispatch. Claude Desktop config in `backend/mcp/claude_desktop_config.example.json`. Run: `python -m backend.mcp.ontology_server`.
+LangSmith tracing already wired in Phase 3 (`backend/observability.py`). **Deferred by user:** README/results table, LangSmith dashboards/alerts (UI-side), resuming ingestion, skipped LLM evals, missing AMD Q3.
 
 **Phase 3 — Orchestration + eval: ✅ complete (code).** LangGraph Q&A path in `backend/graph/` (Supervisor router → RAG → Judge → bounded retry, `MemorySaver` session checkpointer via `thread_id`); `/query` migrated to stream the graph via `astream`. Eval harness in `backend/eval/`: `coherence.py` (parent↔child cosine vs random), `retrieval_metrics.py` + `gold/gold_qa.json` (10Q: precision/recall/hit@k/MRR/nDCG), `faithfulness.py` + `gold/gold_faith.json` (15Q, Judge-based faithfulness/citation-accuracy), `run_eval.py` runner. LangSmith tracing via `backend/observability.py` (`@traceable` in run_eval). Custom Judge-based faithfulness chosen over RAGAS.
   - **Verified:** graph via direct `invoke()` (routes qa, Judge pass, cited answer, session messages); `main.py` imports + all routes; coherence = **0.477 vs 0.176 random** (Δ+0.30 ✓); retrieval@10 = **hit 0.80, recall 0.62, MRR 0.45, nDCG 0.45**.

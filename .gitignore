@@ -13,3 +13,5 @@ node_modules/
 # Generated data artifacts
 data/chroma/
 data/ingest_checkpoint.json
+data/earnings_intel.db
+data/_*.log

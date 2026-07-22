@@ -1,64 +1,103 @@
-"""Orchestrate ingestion for one transcript: read → clean → segment → embed.
+"""Sequential, resumable ontology ingestion (plan Sections 4.1, 5.3).
 
-A simple JSON checkpoint (``data/ingest_checkpoint.json``) records which
-transcripts have completed, so a run can resume after an interruption without
-re-embedding finished transcripts.
+Per transcript, per paragraph batch:
+    embed → Topic Retriever → Ontologist → persist occurrences + enrich ChromaDB
+Progress is checkpointed to SQLite ``ingest_progress`` after every batch, so an
+interrupted run resumes mid-transcript. A single SQLite connection is the sole
+writer to the ontology (correctness rule: no parallel Ontologist writes).
 """
 
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
-from typing import Any
 
-from backend.ingestion.embedder import embed_paragraphs
+from backend.agents.ontologist import resolve_topics
+from backend.agents.retriever import extract_topics, retriever_batch_size
+from backend.ingestion.embedder import embed_paragraphs, get_collection
 from backend.ingestion.reader import RAW_DIR, Transcript, list_transcripts, read_transcript
-from backend.ingestion.segmenter import Paragraph, segment
-
-CHECKPOINT_PATH = Path(__file__).resolve().parents[2] / "data" / "ingest_checkpoint.json"
-
-
-def load_checkpoint(path: Path = CHECKPOINT_PATH) -> dict[str, Any]:
-    """Load the ingest checkpoint, or return an empty record if none exists."""
-    if not path.exists():
-        return {}
-    return json.loads(path.read_text(encoding="utf-8"))
+from backend.ingestion.segmenter import segment
+from backend.ontology import seed, store
 
 
-def save_checkpoint(state: dict[str, Any], path: Path = CHECKPOINT_PATH) -> None:
-    """Persist the ingest checkpoint to disk."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+def _ensure_ready(conn: sqlite3.Connection) -> None:
+    """Create tables and seed the ontology once (both idempotent)."""
+    store.init_db(conn)
+    added = seed.load_seed(conn)
+    if added:
+        print(f"[seed] loaded {added} seed topics")
 
 
-def is_done(transcript_id: str, checkpoint: dict[str, Any] | None = None) -> bool:
-    """Return True if ``transcript_id`` is marked completed in the checkpoint."""
-    checkpoint = checkpoint if checkpoint is not None else load_checkpoint()
-    return checkpoint.get(transcript_id, {}).get("status") == "done"
+def ingest_transcript(
+    path: str | Path, conn: sqlite3.Connection | None = None, force: bool = False
+) -> None:
+    """Ingest one transcript into the ontology (resumable, single-writer)."""
+    own_conn = conn is None
+    conn = conn or store.connect()
+    _ensure_ready(conn)
 
-
-def ingest_transcript(path: str | Path, force: bool = False) -> list[Paragraph]:
-    """Ingest one transcript end to end; skip if already checkpointed (unless force)."""
     transcript: Transcript = read_transcript(path)
-    checkpoint = load_checkpoint()
+    tid = transcript.transcript_id
+    progress = store.get_progress(conn, tid)
+    if progress and progress[1] == "done" and not force:
+        print(f"[skip] {tid} already ingested")
+        if own_conn:
+            conn.close()
+        return
 
-    if not force and is_done(transcript.transcript_id, checkpoint):
-        print(f"[skip] {transcript.transcript_id} already ingested")
-        return []
-
+    last_done = -1 if (force or not progress) else progress[0]
     paragraphs = segment(transcript)
-    count = embed_paragraphs(paragraphs)
+    collection = get_collection()
+    batch_size = retriever_batch_size()
 
-    checkpoint[transcript.transcript_id] = {
-        "status": "done",
-        "paragraph_count": count,
-    }
-    save_checkpoint(checkpoint)
-    print(f"[done] {transcript.transcript_id}: {count} paragraphs embedded")
-    return paragraphs
+    company = paragraphs[0].metadata["company_ticker"] if paragraphs else transcript.company_ticker
+    quarter = paragraphs[0].metadata["quarter"] if paragraphs else transcript.quarter
+
+    for start in range(0, len(paragraphs), batch_size):
+        batch = paragraphs[start : start + batch_size]
+        batch_max_index = batch[-1].metadata["paragraph_index"]
+        if batch_max_index <= last_done:
+            continue
+
+        embed_paragraphs(batch, collection)
+        extractions = extract_topics(batch)
+        name_to_id = resolve_topics(conn, extractions)
+
+        para_topics: dict[str, set[str]] = {p.paragraph_id: set() for p in batch}
+        for e in extractions:
+            topic_id = name_to_id.get(e["topic_name"])
+            if not topic_id:
+                continue
+            store.write_occurrence(
+                conn, topic_id, company, quarter, e["paragraph_id"], e["excerpt"]
+            )
+            para_topics[e["paragraph_id"]].add(topic_id)
+
+        # Enrich each paragraph's ChromaDB metadata with its topic ids (JSON string,
+        # since Chroma rejects list-valued metadata).
+        collection.update(
+            ids=[p.paragraph_id for p in batch],
+            metadatas=[
+                {**p.metadata, "topic_ids": json.dumps(sorted(para_topics[p.paragraph_id]))}
+                for p in batch
+            ],
+        )
+
+        store.set_progress(conn, tid, batch_max_index, "in_progress")
+        print(f"[batch] {tid}: paragraphs {start}-{batch_max_index} → {len(extractions)} extractions")
+
+    final_index = paragraphs[-1].metadata["paragraph_index"] if paragraphs else -1
+    store.set_progress(conn, tid, final_index, "done")
+    print(f"[done] {tid}: {len(paragraphs)} paragraphs")
+    if own_conn:
+        conn.close()
 
 
 def ingest_all(raw_dir: str | Path = RAW_DIR, force: bool = False) -> None:
     """Sequentially ingest every transcript in ``raw_dir`` (resumable)."""
+    conn = store.connect()
+    _ensure_ready(conn)
     for path in list_transcripts(raw_dir):
-        ingest_transcript(path, force=force)
+        ingest_transcript(path, conn=conn, force=force)
+    conn.close()

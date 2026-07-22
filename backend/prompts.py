@@ -102,6 +102,36 @@ Respond with JSON only, directly parseable, in exactly this shape:
 [{"topic_name": "Data Center Demand", "excerpts": ["excerpt 1", "excerpt 2"]}]"""
 
 
+# Batch variant: many id-labeled paragraphs per call, output tied to paragraph ids.
+# Wrapped in an object so it is compatible with Groq JSON-object mode.
+TOPIC_RETRIEVER_BATCH_USER = """From the earnings-call paragraphs below (each tagged
+with an id like [P0], [P1], ...), extract the financially relevant topics an equity
+analyst would track. Attribute every extracted topic to the specific paragraph id it
+came from, with a short grounded excerpt.
+
+Rules:
+1. Tag multiple topics per paragraph when present — both general (guidance, capex,
+   dividends, buybacks, M&A, margins, supply chain, pricing, demand) and specific
+   (data center demand, AI inference, HBM, Blackwell, EPYC, cloud migration, ad revenue).
+2. Each topic is ONE concept. Never concatenate two concepts in a topic name
+   (write "AI" and "Autopilot" separately, never "Autopilot and AI").
+3. The excerpt must be grounded strictly in that paragraph's text (light rewording for
+   clarity is fine). Do NOT speculate or add outside knowledge.
+4. If a paragraph has no relevant financial topic, produce no rows for it.
+5. Extract at the natural granularity of the text — neither too broad nor artificially
+   narrow — since these topics will later be placed in a hierarchical ontology.
+
+Context (metadata only — do not extract topics about these fields):
+  Company: ${company}   Quarter: ${quarter}
+
+Paragraphs:
+${labeled_paragraphs}
+
+Respond with JSON only, directly parseable, in exactly this shape (one row per
+topic-in-paragraph):
+{"extractions": [{"paragraph_id": "P0", "topic_name": "Data Center Demand", "excerpt": "..."}]}"""
+
+
 # ---------------------------------------------------------------------------
 # 3. ONTOLOGIST — TOPIC EXISTENCE  (semantic-equivalence check)
 # ---------------------------------------------------------------------------
@@ -223,6 +253,58 @@ Respond with JSON only:
 
 
 # ---------------------------------------------------------------------------
+# 3b. ONTOLOGIST — TOPIC EXISTENCE (BATCH)  — many borderline queries per call
+# ---------------------------------------------------------------------------
+TOPIC_EXISTENCE_BATCH_USER = """For EACH query topic below, decide whether it is a TRUE
+bidirectional semantic equivalent of any of ITS OWN listed candidate topics.
+
+Equivalence rules (apply per query, independently):
+- Equivalent = same scope AND same specificity; each topic substitutable for the other.
+- A candidate that is a PARENT/superset of the query is NOT a match.
+- A candidate that is a CHILD/subset of the query is NOT a match.
+- If none of a query's candidates is a true equivalent, return null for that query.
+
+Queries (each with its own candidate list "id | name | aliases"):
+${queries_block}
+
+Respond with JSON only, one result per query:
+{
+  "results": [
+    {"query_topic": "<name>", "is_match": true | false, "matched_topic_id": "<id or null>"}
+  ]
+}"""
+
+
+# ---------------------------------------------------------------------------
+# 4b. ONTOLOGIST — TOPIC INSERTION (BATCH)  — many new topics per call
+# ---------------------------------------------------------------------------
+TOPIC_INSERTION_BATCH_USER = """Assign EACH new topic below to the most specific valid
+existing parent in the ontology tree, or to "__ROOT__" if no existing node is a sensible
+parent (it becomes a new top-level node).
+
+Rules (apply to every new topic):
+- The parent MUST be an existing node name in the tree below, or "__ROOT__". Never invent nodes.
+- STRONGLY prefer an existing parent. Use "__ROOT__" ONLY when no existing node is even a
+  broad category for the topic. Almost every earnings-call topic (a financial metric, a
+  business segment, a product, a demand/market theme) belongs under one of the existing roots.
+- Do not skip levels; prefer the most granular valid parent.
+- Do not rename anything.
+
+NEW topics (JSON list of names):
+${new_topics}
+
+Ontology tree (parent -> its child topics):
+${ontology_tree}
+
+Respond with JSON only, one row per new topic:
+{
+  "insertions": [
+    {"new_topic": "<name>", "parent": "<exact existing node name, or __ROOT__>"}
+  ]
+}"""
+
+
+# ---------------------------------------------------------------------------
 # 5. RAG SYNTHESIS  (grounded, citation-linked answer)
 # ---------------------------------------------------------------------------
 RAG_SYNTHESIS_SYSTEM = """You are an equity-research assistant. You answer ONLY from the
@@ -298,10 +380,13 @@ Respond with JSON only:
 # Convenience registry + tiny usage helper
 # ---------------------------------------------------------------------------
 PROMPTS = {
-    "supervisor":       {"system": SUPERVISOR_SYSTEM,       "user": SUPERVISOR_USER},
-    "topic_retriever":  {"system": TOPIC_RETRIEVER_SYSTEM,  "user": TOPIC_RETRIEVER_USER},
+    "supervisor":            {"system": SUPERVISOR_SYSTEM,      "user": SUPERVISOR_USER},
+    "topic_retriever":       {"system": TOPIC_RETRIEVER_SYSTEM, "user": TOPIC_RETRIEVER_USER},
+    "topic_retriever_batch": {"system": TOPIC_RETRIEVER_SYSTEM, "user": TOPIC_RETRIEVER_BATCH_USER},
     "topic_existence":  {"system": TOPIC_EXISTENCE_SYSTEM,  "user": TOPIC_EXISTENCE_USER},
+    "topic_existence_batch": {"system": TOPIC_EXISTENCE_SYSTEM, "user": TOPIC_EXISTENCE_BATCH_USER},
     "topic_insertion":  {"system": TOPIC_INSERTION_SYSTEM,  "user": TOPIC_INSERTION_USER},
+    "topic_insertion_batch": {"system": TOPIC_INSERTION_SYSTEM, "user": TOPIC_INSERTION_BATCH_USER},
     "rag_synthesis":    {"system": RAG_SYNTHESIS_SYSTEM,    "user": RAG_SYNTHESIS_USER},
     "judge":            {"system": JUDGE_SYSTEM,            "user": JUDGE_USER},
 }

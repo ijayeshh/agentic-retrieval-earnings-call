@@ -38,10 +38,20 @@ class ModelBroker:
         if provider != "groq":
             raise ValueError(f"Unsupported llm_provider: {provider!r}")
 
-        return ChatGroq(
-            model=self.config["llm_model"],
-            temperature=self.config["temperature"],
-        )
+        kwargs: dict[str, Any] = {
+            "model": self.config["llm_model"],
+            "temperature": self.config["temperature"],
+        }
+        # Bound output to fit the free-tier tokens-per-minute cap (config-driven).
+        max_tokens = self.config.get("llm_max_tokens")
+        if max_tokens:
+            kwargs["max_tokens"] = int(max_tokens)
+        # gpt-oss reasoning models: keep reasoning short so JSON output isn't truncated.
+        reasoning_effort = self.config.get("reasoning_effort")
+        if reasoning_effort:
+            kwargs["reasoning_effort"] = reasoning_effort
+
+        return ChatGroq(**kwargs)
 
     def get_embeddings(self) -> Any:
         """Return a local HuggingFace SentenceTransformer for retrieval/pre-filter."""

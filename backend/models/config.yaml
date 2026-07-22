@@ -9,3 +9,19 @@ embedding_model: all-MiniLM-L6-v2
 coherence_embedding_model: all-MiniLM-L6-v2
 
 temperature: 0
+
+# Free-tier (8000 tokens/min) discipline for the gpt-oss reasoning model:
+# cap output tokens and keep reasoning short so JSON output isn't truncated.
+llm_max_tokens: 2048
+reasoning_effort: low
+
+# --- Phase 1: ontology ingestion tunables ---
+# Existence pre-filter cosine thresholds (see ontology/existence_prefilter.py).
+existence_high: 0.85          # >= treat candidate as an alias, no LLM call
+existence_low: 0.55           # <  treat candidate as new, skip LLM
+existence_shortlist_k: 5      # borderline: candidates sent to the LLM equivalence check
+
+retriever_batch_size: 6       # paragraphs per Groq call (small to fit 8000 TPM)
+insertion_batch_size: 10      # (reserved) new topics considered per insertion pass
+
+groq_rpm: 5                   # spacing to stay near the 8000 TPM cap; 429 backoff covers bursts

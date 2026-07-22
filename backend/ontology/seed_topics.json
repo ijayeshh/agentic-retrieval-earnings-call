@@ -1,0 +1,87 @@
+{
+  "AI & Machine Learning": [
+    "Generative AI",
+    "AI Inference",
+    "AI Training",
+    "Agentic AI",
+    "AI Software & Frameworks"
+  ],
+  "Cloud & Data Center": [
+    "Data Center Demand",
+    "Hyperscaler Spending",
+    "Cloud Migration",
+    "Networking & Interconnect",
+    "Rack-Scale Systems"
+  ],
+  "Semiconductors & Hardware": [
+    "GPUs & Accelerators",
+    "CPUs & Processors",
+    "Memory & HBM",
+    "Foundry & Manufacturing",
+    "Process Technology"
+  ],
+  "Advertising": [
+    "Ad Revenue",
+    "Ad Pricing",
+    "Ad Targeting & Measurement"
+  ],
+  "Consumer Devices": [
+    "PC & Laptop Demand",
+    "Gaming & Graphics",
+    "On-Device AI"
+  ],
+  "Software & Subscriptions": [
+    "Subscription Revenue",
+    "Enterprise Software",
+    "Developer Ecosystem"
+  ],
+  "Capital Allocation": [
+    "Capex",
+    "Buybacks",
+    "Dividends",
+    "M&A",
+    "Free Cash Flow"
+  ],
+  "Macro & Regulatory": [
+    "Macro Environment",
+    "Export Controls & China",
+    "Tariffs & Trade",
+    "Regulation & Antitrust"
+  ],
+  "Supply Chain": [
+    "Wafer & Component Supply",
+    "Manufacturing Capacity",
+    "Inventory"
+  ],
+  "Guidance": [
+    "Revenue Guidance",
+    "Margin Guidance",
+    "Segment Outlook"
+  ],
+  "Financial Performance": [
+    "Revenue",
+    "Revenue Growth",
+    "Earnings Per Share",
+    "Gross Margin",
+    "Operating Margin",
+    "Net Income",
+    "Operating Expenses",
+    "Effective Tax Rate",
+    "Cash Flow",
+    "Share Count"
+  ],
+  "Segment Performance": [
+    "Data Center Segment",
+    "Client Segment",
+    "Gaming Segment",
+    "Embedded Segment",
+    "Server Business"
+  ],
+  "Products & Roadmap": [
+    "GPU Products",
+    "CPU Products",
+    "AI Systems & Racks",
+    "Product Launches",
+    "Process & Packaging"
+  ]
+}

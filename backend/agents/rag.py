@@ -7,14 +7,12 @@ via the model broker using the ``rag_synthesis`` prompt.
 
 from __future__ import annotations
 
-import json
-import re
 from typing import Any
 
+from backend.agents._llm import invoke_json as _invoke_json  # re-exported for callers
 from backend.ingestion.embedder import get_collection
 from backend.ingestion.reader import _TICKER_MAP
-from backend.models.broker import get_embeddings, get_llm
-from backend.prompts import build_messages
+from backend.models.broker import get_embeddings
 
 DEFAULT_K = 8
 
@@ -94,25 +92,6 @@ def format_excerpts(excerpts: list[dict[str, Any]]) -> str:
     return "\n".join(
         f"{e['id']} | {e['company']} | {e['quarter']} | {e['text']}" for e in excerpts
     )
-
-
-def _extract_json(content: str) -> dict[str, Any]:
-    """Parse a JSON object from a model response, tolerating code fences."""
-    try:
-        return json.loads(content)
-    except json.JSONDecodeError:
-        match = re.search(r"\{.*\}", content, re.DOTALL)
-        if not match:
-            raise
-        return json.loads(match.group(0))
-
-
-def _invoke_json(prompt_name: str, **variables: Any) -> dict[str, Any]:
-    """Build messages for a prompt, invoke Groq in JSON mode, return parsed JSON."""
-    messages = build_messages(prompt_name, **variables)
-    llm = get_llm().bind(response_format={"type": "json_object"})
-    response = llm.invoke(messages)
-    return _extract_json(response.content)
 
 
 def synthesize(question: str, excerpts: list[dict[str, Any]]) -> dict[str, Any]:

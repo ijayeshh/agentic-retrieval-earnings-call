@@ -1,10 +1,14 @@
 # CLAUDE.md
 
 ## Current Phase
-**Phase 1 — Core ontology** (next)
-Topic Retriever + Ontologist (local existence pre-filter + LLM insertion) + seed ontology; SQLite tree + occurrences; sequential resumable ingest.
+**Phase 3 - Orchestration + eval** (next)
+Supervisor routing; Judge + retry in-graph; ontology coherence vs random + RAGAS (15Q) + retrieval metrics; LangSmith regression suite.
 
-**Phase 0 — Skeleton: ✅ complete.** Repo scaffolded; config-driven model broker + smoke test (Groq + local embedding); ingestion pipeline (dual AMD/NVIDIA transcript formats → ChromaDB, 787 paragraphs, resumable checkpoint); RAG + Judge cited Q&A; FastAPI (`/query` SSE stream, `/health`); React+TS single-page frontend (query box → streamed cited answer) verified end-to-end through the Vite proxy.
+**Phase 2 — Trend insights: ✅ complete (code).** `backend/insights/trend_kendall.py` (per-company/topic quarterly frequency → Kendall's tau → up/down/flat, product-name topics excluded); `GET /trends` and `GET /ontology` endpoints; frontend tabs — Recharts trend chart + interactive ontology explorer. Verified against AMD Q1+Q2 data.
+
+**Phase 1 — Core Ontology: ✅ complete (code); ingestion PAUSED.** Topic Retriever (batched) + Ontologist (local existence pre-filter → batched LLM existence/insertion) + expanded seed ontology (13 roots); SQLite tree/occurrences/embeddings/checkpoint (`data/earnings_intel.db`). Groq gpt-oss-20b tuned for free-tier (reasoning_effort=low, max_tokens, groq_rpm throttle + 429 backoff). **Ingest paused at Groq daily caps:** amd-q1 done, amd-q2 partial (para 53), rest pending. Resume any day via `ingest_all()` (skips done, resumes partial) — **do NOT wipe `data/`**.
+
+**Phase 0 — Skeleton: ✅ complete.** Repo scaffolded; config-driven model broker + smoke test (Groq + local embedding); ingestion pipeline (dual AMD/NVIDIA transcript formats → ChromaDB, resumable checkpoint); RAG + Judge cited Q&A; FastAPI (`/query` SSE stream, `/health`); React+TS single-page frontend verified end-to-end through the Vite proxy.
 
 ## What this is
 An agentic RAG system that ingests tech-sector earnings call transcripts, autonomously extracts financial topics, organizes them into a self-evolving hierarchical ontology, and surfaces trend insights plus cited analyst Q&A. It reproduces the Bloomberg FinIR 2025 paper *"Agentic Retrieval of Topics and Insights from Earnings Calls"* (arXiv 2507.07906). Scope: technology sector, 2 companies × 4 quarters = 8 transcripts placed manually in `data/raw/`, paragraph-level granularity.

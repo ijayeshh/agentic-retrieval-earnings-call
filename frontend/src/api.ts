@@ -1,4 +1,4 @@
-import type { QueryEvent, QueryRequest } from "./types";
+import type { OntologyNode, QueryEvent, QueryRequest, TrendRow } from "./types";
 
 /**
  * POST to /query and parse the Server-Sent Events response incrementally.
@@ -52,5 +52,23 @@ export async function streamQuery(
 export async function fetchHealth(): Promise<{ status: string; ingested_paragraphs: number }> {
   const response = await fetch("/health");
   if (!response.ok) throw new Error(`Health check failed: ${response.status}`);
+  return response.json();
+}
+
+export async function fetchTrends(
+  company?: string,
+  topic?: string,
+): Promise<{ count: number; trends: TrendRow[] }> {
+  const params = new URLSearchParams();
+  if (company) params.set("company", company);
+  if (topic) params.set("topic", topic);
+  const response = await fetch(`/trends?${params.toString()}`);
+  if (!response.ok) throw new Error(`Trends failed: ${response.status}`);
+  return response.json();
+}
+
+export async function fetchOntology(): Promise<{ total: number; roots: OntologyNode[] }> {
+  const response = await fetch("/ontology");
+  if (!response.ok) throw new Error(`Ontology failed: ${response.status}`);
   return response.json();
 }

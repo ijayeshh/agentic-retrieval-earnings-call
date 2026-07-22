@@ -117,8 +117,72 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   border-radius: 999px;
   text-transform: capitalize;
 }
-.verdict.pass { background: #e2f5ea; color: #1b7a44; }
+.verdict.pass, .verdict.up { background: #e2f5ea; color: #1b7a44; }
 .verdict.retry { background: #fdf0d5; color: #9a6a00; }
+.verdict.down { background: #fde6e6; color: #b02a2a; }
+.verdict.flat, .verdict.insufficient { background: #eef0f7; color: #555; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.5rem;
+  border-bottom: 1px solid #e4e6ef;
+}
+.tab {
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #555;
+  border-radius: 8px 8px 0 0;
+  font-weight: 500;
+}
+.tab.active { background: #4b56d2; color: #fff; }
+
+.muted { color: #888; font-size: 0.85rem; }
+
+/* Trends */
+.trend-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+.trend-table th, .trend-table td {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid #eef0f7;
+}
+.trend-table tbody tr { cursor: pointer; }
+.trend-table tbody tr:hover { background: #f7f8fc; }
+.trend-table tr.active { background: #eef0ff; }
+
+/* Ontology tree */
+.tree, .tree ul {
+  list-style: none;
+  padding-left: 1rem;
+  margin: 0;
+}
+.tree { padding-left: 0; }
+.tree-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.tree-row:hover { background: #f7f8fc; }
+.twist { width: 1rem; color: #888; }
+.tree-name { font-weight: 500; }
+.badge {
+  font-size: 0.7rem;
+  background: #4b56d2;
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+}
+.aliases { font-size: 0.75rem; color: #888; font-style: italic; }
 
 .claims { padding-left: 1.25rem; }
 .claims li { margin-bottom: 0.4rem; }

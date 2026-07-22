@@ -38,3 +38,25 @@ export interface QueryRequest {
   quarter?: string | null;
   k?: number;
 }
+
+// --- Trends (/trends) ---
+export interface TrendRow {
+  company: string;
+  topic_id: string;
+  topic_name: string;
+  aliases: string[];
+  series: Record<string, number>;
+  tau: number | null;
+  p_value: number | null;
+  direction: "up" | "down" | "flat" | "insufficient";
+  significant: boolean;
+}
+
+// --- Ontology (/ontology) ---
+export interface OntologyNode {
+  topic_id: string;
+  name: string;
+  aliases: string[];
+  occurrences: number;
+  children: OntologyNode[];
+}

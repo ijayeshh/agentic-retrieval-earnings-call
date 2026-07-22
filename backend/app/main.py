@@ -1,8 +1,9 @@
-"""FastAPI app (plan Section 13) — Phase 0 cited RAG Q&A over ingested transcripts.
+"""FastAPI app (plan Section 13).
 
 Endpoints:
 - ``POST /query``  — run RAG → Judge (bounded retries) and stream progress + the
   final cited answer as Server-Sent Events.
+- ``GET  /trends`` — quarter-over-quarter topic-frequency trends (Kendall's tau).
 - ``GET  /health`` — liveness + ingested-paragraph count.
 """
 
@@ -20,6 +21,8 @@ from starlette.concurrency import run_in_threadpool
 from backend.agents.judge import MAX_RETRIES, judge
 from backend.agents.rag import retrieve, synthesize
 from backend.ingestion.embedder import get_collection
+from backend.insights.trend_kendall import compute_trends
+from backend.ontology import store
 
 load_dotenv()
 
@@ -60,6 +63,72 @@ async def health() -> dict[str, Any]:
     """Liveness check plus the number of ingested paragraphs."""
     count = await run_in_threadpool(lambda: get_collection().count())
     return {"status": "ok", "ingested_paragraphs": count}
+
+
+@app.get("/trends")
+async def trends(
+    company: str | None = None,
+    topic: str | None = None,
+    min_quarters: int = 2,
+    exclude_products: bool = True,
+    limit: int = 50,
+) -> dict[str, Any]:
+    """Quarter-over-quarter topic-frequency trends (Kendall's tau — plain Python)."""
+
+    def _compute() -> list[dict[str, Any]]:
+        conn = store.connect()
+        try:
+            rows = compute_trends(
+                conn,
+                company=company,
+                topic=topic,
+                min_quarters=min_quarters,
+                exclude_products=exclude_products,
+            )
+            return rows[:limit]
+        finally:
+            conn.close()
+
+    results = await run_in_threadpool(_compute)
+    return {"count": len(results), "trends": results}
+
+
+@app.get("/ontology")
+async def ontology() -> dict[str, Any]:
+    """Return the topics ontology as a nested tree (for the explorer UI)."""
+
+    def _tree() -> dict[str, Any]:
+        conn = store.connect()
+        try:
+            nodes = store.get_all_nodes(conn)
+            occ = dict(
+                conn.execute(
+                    "SELECT topic_id, COUNT(*) FROM topic_occurrence GROUP BY topic_id"
+                ).fetchall()
+            )
+        finally:
+            conn.close()
+
+        children: dict[str | None, list[dict[str, Any]]] = {}
+        node_json: dict[str, dict[str, Any]] = {}
+        for n in nodes:
+            node_json[n.topic_id] = {
+                "topic_id": n.topic_id,
+                "name": n.name,
+                "aliases": n.aliases,
+                "occurrences": occ.get(n.topic_id, 0),
+                "children": [],
+            }
+        for n in nodes:
+            children.setdefault(n.parent_id, []).append(node_json[n.topic_id])
+        for n in nodes:
+            node_json[n.topic_id]["children"] = sorted(
+                children.get(n.topic_id, []), key=lambda c: c["name"].lower()
+            )
+        roots = sorted(children.get(None, []), key=lambda c: c["name"].lower())
+        return {"total": len(nodes), "roots": roots}
+
+    return await run_in_threadpool(_tree)
 
 
 @app.post("/query")

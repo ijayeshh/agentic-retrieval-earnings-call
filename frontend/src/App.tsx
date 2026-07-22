@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchHealth, streamQuery } from "./api";
 import type { Citation, Claim, QueryEvent, Verdict } from "./types";
+import TrendChart from "./TrendChart";
+import OntologyExplorer from "./OntologyExplorer";
 import "./App.css";
 
 const COMPANIES = ["", "AMD", "NVDA"];
 const QUARTERS = ["", "Q1", "Q2", "Q3", "Q4"];
+
+type Tab = "qa" | "trends" | "ontology";
 
 export default function App() {
   const [question, setQuestion] = useState("");
@@ -21,6 +25,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [health, setHealth] = useState<string>("checking…");
+  const [tab, setTab] = useState<Tab>("qa");
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -99,6 +104,24 @@ export default function App() {
         <span className={`health ${health.startsWith("ok") ? "ok" : "bad"}`}>{health}</span>
       </header>
 
+      <nav className="tabs">
+        {(["qa", "trends", "ontology"] as Tab[]).map((t) => (
+          <button
+            key={t}
+            type="button"
+            className={`tab ${tab === t ? "active" : ""}`}
+            onClick={() => setTab(t)}
+          >
+            {t === "qa" ? "Q&A" : t === "trends" ? "Trends" : "Ontology"}
+          </button>
+        ))}
+      </nav>
+
+      {tab === "trends" && <TrendChart />}
+      {tab === "ontology" && <OntologyExplorer />}
+
+      {tab === "qa" && (
+      <>
       <form onSubmit={onSubmit} className="query-form">
         <textarea
           value={question}
@@ -182,6 +205,8 @@ export default function App() {
             </>
           )}
         </section>
+      )}
+      </>
       )}
     </div>
   );

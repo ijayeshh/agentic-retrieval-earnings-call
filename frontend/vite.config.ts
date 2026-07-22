@@ -10,6 +10,8 @@ export default defineConfig({
     proxy: {
       "/query": { target: "http://127.0.0.1:8000", changeOrigin: true },
       "/health": { target: "http://127.0.0.1:8000", changeOrigin: true },
+      "/trends": { target: "http://127.0.0.1:8000", changeOrigin: true },
+      "/ontology": { target: "http://127.0.0.1:8000", changeOrigin: true },
     },
   },
 });
